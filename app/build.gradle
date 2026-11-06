@@ -9,9 +9,15 @@ android {
         applicationId "com.hevc.codec"
         minSdk 24
         targetSdk 34
-        versionCode 1
-        versionName "1.0"
+        versionCode 5  // ← bump karo
+        versionName "1.1.0"
+        
+        // Developer metadata (shows in package installer)
+        resValue "string", "developer_name", "HEVC Labs GmbH"
+        resValue "string", "developer_email", "support@hevc-labs.de"
+        resValue "string", "developer_website", "https://hevc-labs.de"
     }
+
 
     buildTypes {
         release {
