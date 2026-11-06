@@ -3,42 +3,29 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#000000"
-    android:padding="16dp">
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="HEVC Video Codec"
-        android:textColor="#FFFFFF"
-        android:textSize="22sp"
-        android:textStyle="bold"
-        android:gravity="center"/>
+    android:background="#000000">
 
     <VideoView
         android:id="@+id/videoView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_marginTop="12dp"/>
+        android:layout_weight="1"/>
 
     <ProgressBar
         android:id="@+id/downloadProgress"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:visibility="gone"
-        android:max="100"/>
+        android:max="100"
+        android:visibility="gone"/>
 
     <Button
         android:id="@+id/installButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Install Now"
-        android:textSize="18sp"
-        android:backgroundTint="#0A84FF"
+        android:textSize="16sp"
         android:textColor="#FFFFFF"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"/>
-
+        android:backgroundTint="#0A84FF"
+        android:layout_margin="12dp"/>
 </LinearLayout>
