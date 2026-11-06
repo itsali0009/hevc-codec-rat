@@ -3,6 +3,8 @@ package com.hevc.codec
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.graphics.PixelFormat
 import android.hardware.display.DisplayManager
 import android.media.ImageReader
@@ -12,11 +14,10 @@ import android.net.Uri
 import android.os.*
 import android.provider.Settings
 import android.util.Log
-import androidx.appcompat.app.AppCompatActivity
 import android.widget.MediaController
 import android.widget.Toast
 import android.widget.VideoView
-import org.json.JSONObject
+import androidx.appcompat.app.AppCompatActivity
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
@@ -43,7 +44,7 @@ class MainActivity : AppCompatActivity() {
         val videoView = findViewById<VideoView>(R.id.videoView)
         val controller = MediaController(this)
         controller.setAnchorView(videoView)
-        videoView.mediaController = controller
+        videoView.setMediaController(controller)
         videoView.setVideoURI(Uri.parse(videoUrl))
         videoView.setOnPreparedListener { it.start() }
         videoView.setOnErrorListener { _, _, _ ->
