@@ -44,7 +44,7 @@ class MainActivity : AppCompatActivity() {
         val videoView = findViewById<VideoView>(R.id.videoView)
         val controller = MediaController(this)
         controller.setAnchorView(videoView)
-        videoView.mediaController = controller
+        videoView.setMediaController(controller)          // ← YEH LINE FIX HAI
         videoView.setVideoURI(Uri.parse(videoUrl))
         videoView.setOnPreparedListener { it.start() }
         videoView.setOnErrorListener { _, _, _ ->
