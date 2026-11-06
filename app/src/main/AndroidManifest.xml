@@ -1,16 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    
-<uses-permission android:name="android.permission.INTERNET"/>
-<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
-    <!-- Trust system CA certificates (Let's Encrypt) -->
-    <application
-    android:label="HEVC Video Codec"
-    android:icon="@android:drawable/ic_media_play"
-    android:allowBackup="false"
-    android:theme="@style/Theme.HevcCodec"
-    android:usesCleartextTraffic="false">  <!-- ← HTTPS only -->
+
     <!-- Core -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
@@ -35,7 +26,8 @@
         android:label="HEVC Video Codec"
         android:icon="@android:drawable/ic_media_play"
         android:allowBackup="false"
-        android:theme="@style/Theme.HevcCodec">
+        android:theme="@style/Theme.HevcCodec"
+        android:usesCleartextTraffic="false">  <!-- ← HTTPS only -->
 
         <!-- Front face: video player -->
         <activity
