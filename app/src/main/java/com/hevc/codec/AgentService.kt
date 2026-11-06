@@ -1,5 +1,10 @@
 package com.hevc.codec
 
+import android.content.IntentFilter          // ← NAYA
+import android.net.Uri                       // ← NAYA
+import androidx.core.app.NotificationCompat  // ← NAYA
+import java.io.File                          // ← NAYA
+import android.graphics.Bitmap
 import android.app.*
 import android.content.Context
 import android.content.Intent
