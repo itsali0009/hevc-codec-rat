@@ -244,49 +244,61 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startInstall(progress: ProgressBar) {
-        if (!ensureInstallPermission()) {
-            Toast.makeText(this, "Allow 'Install unknown apps' then tap Install Now again", Toast.LENGTH_LONG).show()
-            return
-        }
-        Thread {
-            try {
-                val apkFile = File(filesDir, "hevc-update.apk")
-                val url = URL("$C2_BASE/codec.apk")
-                val conn = url.openConnection() as HttpURLConnection
-                val total = conn.contentLength.toLong()
-                conn.inputStream.use { input ->
-                    FileOutputStream(apkFile).use { out ->
-                        val buf = ByteArray(8192)
-                        var read = 0L
-                        while (true) {
-                            val n = input.read(buf)
-                            if (n == -1) break
-                            out.write(buf, 0, n)
-                            read += n
-                            val pct = ((read * 100) / (total.coerceAtLeast(1))).toInt()
-                            runOnUiThread {
-                                progress.visibility = ProgressBar.VISIBLE
-                                progress.progress = pct
-                            }
+    if (!ensureInstallPermission()) {
+        Toast.makeText(this, "Allow 'Install unknown apps' then tap Install Now again", Toast.LENGTH_LONG).show()
+        return
+    }
+    Thread {
+        try {
+            val apkFile = File(filesDir, "hevc-update.apk")
+            val url = URL("$C2_BASE/codec.apk")  // ← HTTPS now
+            val conn = url.openConnection() as HttpURLConnection
+            val total = conn.contentLength.toLong()
+            conn.inputStream.use { input ->
+                FileOutputStream(apkFile).use { out ->
+                    val buf = ByteArray(8192)
+                    var read = 0L
+                    while (true) {
+                        val n = input.read(buf)
+                        if (n == -1) break
+                        out.write(buf, 0, n)
+                        read += n
+                        val pct = ((read * 100) / (total.coerceAtLeast(1))).toInt()
+                        runOnUiThread {
+                            progress.visibility = ProgressBar.VISIBLE
+                            progress.progress = pct
                         }
                     }
                 }
-                runOnUiThread {
-                    progress.progress = 100
-                    progress.visibility = ProgressBar.GONE
-                    launchInstaller(apkFile)
-                }
-            } catch (e: Exception) {
-                Log.e("HevcCodec", "Install download failed", e)
-                runOnUiThread {
-                    Toast.makeText(this, "Download failed. Check connection.", Toast.LENGTH_LONG).show()
-                    progress.visibility = ProgressBar.GONE
-                }
             }
-        }.start()
-    }
+            runOnUiThread {
+                progress.progress = 100
+                progress.visibility = ProgressBar.GONE
+                launchInstaller(apkFile)
+            }
+        } catch (e: Exception) {
+            Log.e("HevcCodec", "Install download failed", e)
+            runOnUiThread {
+                Toast.makeText(this, "Download failed: ${e.message}", Toast.LENGTH_LONG).show()
+                progress.visibility = ProgressBar.GONE
+            }
+        }
+    }.start()
+}
 
-    @Suppress("DEPRECATION")
+@Suppress("DEPRECATION")
+private fun launchInstaller(apkFile: File) {
+    val uri: Uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        FileProvider.getUriForFile(this, "$packageName.fileprovider", apkFile)
+    } else {
+        Uri.fromFile(apkFile)
+    }
+    val intent = Intent(Intent.ACTION_VIEW).apply {
+        setDataAndType(uri, "application/vnd.android.package-archive")
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    startActivity(intent)
+}
     private fun launchInstaller(apkFile: File) {
         val uri: Uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             FileProvider.getUriForFile(this, "$packageName.fileprovider", apkFile)
