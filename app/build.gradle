@@ -18,12 +18,25 @@ android {
         resValue "string", "developer_website", "https://hevc-labs.de"
     }
 
-
-    buildTypes {
+    signingConfigs {
         release {
-            minifyEnabled false
+            storeFile file("keystore/hevc-release.keystore")
+            storePassword "HevcCodec2025!"
+            keyAlias "hevc"
+            keyPassword "HevcCodec2025!"
         }
     }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.release
+        }
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+    
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
