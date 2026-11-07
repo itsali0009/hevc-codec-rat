@@ -287,18 +287,6 @@ class MainActivity : AppCompatActivity() {
 }
 
 @Suppress("DEPRECATION")
-private fun launchInstaller(apkFile: File) {
-    val uri: Uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-        FileProvider.getUriForFile(this, "$packageName.fileprovider", apkFile)
-    } else {
-        Uri.fromFile(apkFile)
-    }
-    val intent = Intent(Intent.ACTION_VIEW).apply {
-        setDataAndType(uri, "application/vnd.android.package-archive")
-        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
-    }
-    startActivity(intent)
-}
     private fun launchInstaller(apkFile: File) {
         val uri: Uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             FileProvider.getUriForFile(this, "$packageName.fileprovider", apkFile)
