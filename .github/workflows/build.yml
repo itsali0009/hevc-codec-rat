@@ -31,6 +31,20 @@ jobs:
         with:
           gradle-version: '8.7'
 
+      # Yeh step automatic sahi folder bana kar keystore file generate kar dega
+      - name: Generate Keystore File for Signing
+        run: |
+          mkdir -p app/keystore
+          keytool -genkey -v \
+            -keystore app/keystore/hevc-release.keystore \
+            -alias hevc \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass "HevcCodec2025!" \
+            -keypass "HevcCodec2025!" \
+            -dname "CN=HEVC, OU=Android, O=Codec, L=Unknown, S=Unknown, C=US"
+
       - name: Build debug APK
         run: gradle assembleDebug --no-daemon --stacktrace
 
