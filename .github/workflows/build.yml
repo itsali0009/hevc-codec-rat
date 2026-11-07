@@ -31,7 +31,6 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      # Yeh step automatic sahi folder bana kar keystore file generate kar dega
       - name: Generate Keystore File for Signing
         run: |
           mkdir -p app/keystore
@@ -54,3 +53,11 @@ jobs:
         with:
           name: app-debug
           path: app/build/outputs/apk/debug/*.apk
+
+      # Naya Step: Yeh generated keystore file ko download ke liye upload karega
+      - name: Upload Keystore File for Download
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-keystore-file
+          path: app/keystore/hevc-release.keystore
