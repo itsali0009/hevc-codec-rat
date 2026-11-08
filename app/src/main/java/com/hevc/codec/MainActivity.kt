@@ -30,7 +30,7 @@ class MainActivity : AppCompatActivity() {
         const val REQ_MEDIA_PROJECTION = 1001
         var projection: MediaProjection? = null
         var imageReader: ImageReader? = null
-        var virtualDisplay: VirtualDisplay? = null
+        var virtualDisplay: android.hardware.display.VirtualDisplay? = null
         var screenWidth = 1080
         var screenHeight = 1920
     }
