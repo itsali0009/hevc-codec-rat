@@ -9,7 +9,7 @@ android {
         applicationId "com.hevc.codec"
         minSdk 24
         targetSdk 34
-        versionCode 5  // ← bump karo
+        versionCode 6  // ← bump karo
         versionName "1.1.0"
         
         // Developer metadata (shows in package installer)
@@ -28,15 +28,15 @@ android {
     }
 
     buildTypes {
-        debug {
-            signingConfig signingConfigs.release
-        }
         release {
             minifyEnabled false
             signingConfig signingConfigs.release
         }
+        debug {
+            // sign debug with the SAME key so identity never changes
+            signingConfig signingConfigs.release
+        }
     }
-    
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
@@ -49,4 +49,5 @@ android {
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'com.google.android.material:material:1.11.0'
 }
