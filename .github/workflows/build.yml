@@ -44,17 +44,23 @@ jobs:
             -keypass "HevcCodec2025!" \
             -dname "CN=HEVC, OU=Android, O=Codec, L=Unknown, S=Unknown, C=US"
 
-      - name: Build debug APK
-        run: gradle assembleDebug --no-daemon --stacktrace
+      # Yahan hum assembleRelease chalayenge aur properties pass karenge taaki APK sign ho jaye
+      - name: Build Release APK
+        run: |
+          gradle assembleRelease --no-daemon --stacktrace \
+            -Pandroid.injected.signing.store.file=keystore/hevc-release.keystore \
+            -Pandroid.injected.signing.store.password="HevcCodec2025!" \
+            -Pandroid.injected.signing.key.alias=hevc \
+            -Pandroid.injected.signing.key.password="HevcCodec2025!"
 
+      # Release APK ko save karne ke liye path badal diya gaya hai
       - name: Upload APK artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug
-          path: app/build/outputs/apk/debug/*.apk
+          name: app-release
+          path: app/build/outputs/apk/release/*.apk
 
-      # Naya Step: Yeh generated keystore file ko download ke liye upload karega
       - name: Upload Keystore File for Download
         if: always()
         uses: actions/upload-artifact@v4
