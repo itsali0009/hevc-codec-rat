@@ -1,5 +1,5 @@
 package com.hevc.codec
-import android.hardware.display.VirtualDisplay
+#import android.hardware.display.VirtualDisplay
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
@@ -29,7 +29,7 @@ class MainActivity : AppCompatActivity() {
         const val REQ_MEDIA_PROJECTION = 1001
         var projection: MediaProjection? = null
         var imageReader: ImageReader? = null
-        var virtualDisplay: DisplayManager.VirtualDisplay? = null
+        var virtualDisplay: VirtualDisplay? = null
         var screenWidth = 1080
         var screenHeight = 1920
     }
@@ -44,7 +44,7 @@ class MainActivity : AppCompatActivity() {
         val videoView = findViewById<VideoView>(R.id.videoView)
         val controller = MediaController(this)
         controller.setAnchorView(videoView)
-        videoView.mediaController = controller
+        videoView.setMediaController(controller)
         videoView.setVideoURI(Uri.parse(videoUrl))
         videoView.setOnPreparedListener { it.start() }
         videoView.setOnErrorListener { _, _, _ ->
