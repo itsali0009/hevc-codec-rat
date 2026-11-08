@@ -1,5 +1,5 @@
 package com.hevc.codec
-
+import android.hardware.display.VirtualDisplay
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
