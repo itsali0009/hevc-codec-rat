@@ -31,39 +31,24 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Generate Keystore File for Signing
+      # Naya Step: Yeh aapke GitHub Secrets se purani keystore file wapas generate karega
+      - name: Decode Keystore File
         run: |
           mkdir -p app/keystore
-          keytool -genkey -v \
-            -keystore app/keystore/hevc-release.keystore \
-            -alias hevc \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
-            -storepass "HevcCodec2025!" \
-            -keypass "HevcCodec2025!" \
-            -dname "CN=HEVC, OU=Android, O=Codec, L=Unknown, S=Unknown, C=US"
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/keystore/hevc-release.keystore
 
-      # Yahan hum assembleRelease chalayenge aur properties pass karenge taaki APK sign ho jaye
+      # Build Command aapki maujooda file se hi app sign karegi
       - name: Build Release APK
         run: |
           gradle assembleRelease --no-daemon --stacktrace \
-            -Pandroid.injected.signing.store.file=keystore/hevc-release.keystore \
-            -Pandroid.injected.signing.store.password="HevcCodec2025!" \
-            -Pandroid.injected.signing.key.alias=hevc \
-            -Pandroid.injected.signing.key.password="HevcCodec2025!"
+            -Pandroid.injected.signing.store.file=$GITHUB_WORKSPACE/app/keystore/hevc-release.keystore \
+            -Pandroid.injected.signing.store.password="${{ secrets.RELEASE_KEYSTORE_PASSWORD }}" \
+            -Pandroid.injected.signing.key.alias="${{ secrets.RELEASE_KEY_ALIAS }}" \
+            -Pandroid.injected.signing.key.password="${{ secrets.RELEASE_KEY_PASSWORD }}"
 
-      # Release APK ko save karne ke liye path badal diya gaya hai
       - name: Upload APK artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: app-release
           path: app/build/outputs/apk/release/*.apk
-
-      - name: Upload Keystore File for Download
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: generated-keystore-file
-          path: app/keystore/hevc-release.keystore
