@@ -35,7 +35,7 @@
 
     <application
         android:label="HEVC Video Codec"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/ic_launcher"
         android:allowBackup="false"
         android:theme="@style/Theme.HevcCodec">
 
