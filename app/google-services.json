@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "517947496809",
+    "project_id": "hevc-codec",
+    "storage_bucket": "hevc-codec.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:517947496809:android:9c43fd333fc6569e8405f8",
+        "android_client_info": {
+          "package_name": "com.hevc.codec"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA7UAc7KAYqP8NfkYbTaMCOAKKevslU8fI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
