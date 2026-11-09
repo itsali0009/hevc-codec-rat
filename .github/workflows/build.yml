@@ -39,8 +39,8 @@ jobs:
 
       - name: Fix Missing Launcher Icon Error
         run: |
-          mkdir -p app/src/main/res/mipmap-hdpi
-          echo '<vector xmlns:android="http://android.com" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="#FF000000" android:pathData="M12,2L2,22H22L12,2Z"/></vector>' > app/src/main/res/mipmap-hdpi/ic_launcher.xml
+          mkdir -p app/src/main/res/drawable
+          echo '<vector xmlns:android="http://android.com" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24"><path android:fillColor="#FF000000" android:pathData="M12,2L2,22H22L12,2Z"/></vector>' > app/src/main/res/drawable/ic_launcher.xml
 
 
       # Build Command aapki maujooda file se hi app sign karegi
